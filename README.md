@@ -4,8 +4,11 @@ Projects
 --------
 
 test\_preview: the simplest variant to get the raspicam working.
+
 comming:
+
 test\_encoding
+
 test\_encode\_on\_move
 
 Build
