@@ -5,9 +5,15 @@ Projects
 
 test\_preview: the simplest variant to get the raspicam working.
 
-comming:
+test\_preview\_no\_tunneling: the worst problem so far is to understand how the connections and the callbacks work.
 
-test\_encoding
+This source changes the test\_preview code, taking out the tunneling flag on the connections and passing the buffers manually.
+
+An issue I am currently facing is that I need to set some sleeping time, so the queues don't get stucked.
+
+comming up:
+
+test\_encoding: A simple version of encoding the output as h264 and saving to a file
 
 test\_encode\_on\_move
 
@@ -17,10 +23,10 @@ Build
 
 1. Clone this project in your home directory
    
-2. If the code for userland-master is somewhere else than /opt/vc, fix the path
+2. Take a look on the CMakeLists.txt... 
 
 3. cmake .
 
 4. make
 
-5. If everything goes fine, you have the binary "test\_preview" in the project directory
+5. If everything goes fine, you have the binary "test\_preview" and "test\_preview\_no\_tunneling in the project directory
