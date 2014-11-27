@@ -8,7 +8,6 @@
 #include "interface/vcos/vcos_assert.h"
 
 #include "m_video.h"
-#include "m_graphics.h"
 #include "m_components.h"
 
 void main(void)
