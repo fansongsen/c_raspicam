@@ -9,8 +9,6 @@ test\_preview\_no\_tunneling: the worst problem so far is to understand how the 
 
 This source changes the test\_preview code, taking out the tunneling flag on the connections and passing the buffers manually.
 
-An issue I am currently facing is that I need to set some sleeping time, so the queues don't get stucked.
-
 comming up:
 
 test\_encoding: A simple version of encoding the output as h264 and saving to a file
