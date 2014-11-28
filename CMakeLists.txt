@@ -26,6 +26,8 @@ set (MMAL_LIBS
 
 add_executable(test_preview  ${TEST_SOURCES}   test_preview.c)
 add_executable(test_preview_no_tunneling  ${TEST_SOURCES} test_preview_no_tunneling.c)
+add_executable(test_encode   ${TEST_SOURCES}   test_encode.c)
 
 target_link_libraries(test_preview ${MMAL_LIBS} vcos bcm_host)
 target_link_libraries(test_preview_no_tunneling ${MMAL_LIBS} vcos bcm_host)
+target_link_libraries(test_encode ${MMAL_LIBS} vcos bcm_host)
