@@ -4,11 +4,9 @@
 #include "m_components.h"
 
 // definition of MMAL_COMPONENT_DEFAULT_CAMERA
-#include "util/mmal_default_components.h"
 
 void set_port_default_format(MMAL_ES_FORMAT_T *port_fmt){
-	port_fmt->encoding_variant 	= MMAL_ENCODING_I420;
-	port_fmt->encoding 		= MMAL_ENCODING_OPAQUE;
+	port_fmt->encoding 		= MMAL_ENCODING_I420;
 	port_fmt->es->video.width 	= VCOS_ALIGN_UP(WIDTH, 32);
 	port_fmt->es->video.height 	= VCOS_ALIGN_UP(HEIGHT, 16);
 	port_fmt->es->video.crop.x 	= 0;
