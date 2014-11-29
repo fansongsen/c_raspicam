@@ -63,7 +63,6 @@ int main(void)
 	MMAL_COMPONENT_T *preview=0;
 	static MMAL_CONNECTION_T *preview_conn=0;
 	MMAL_BUFFER_HEADER_T *buffer;
-	void(* MMAL_PORT_BH_CB_T)(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
 	
 	// bcm should be initialized before any GPU call is made
 	bcm_host_init();
