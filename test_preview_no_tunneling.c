@@ -1,8 +1,8 @@
 #include <stdio.h>
 
-#include <sys/types.h>
-#include <pthread.h>
-#include <unistd.h>
+//#include <sys/types.h>
+//#include <pthread.h>
+//#include <unistd.h>
 
 #include "interface/mmal/mmal.h"
 #include "interface/mmal/mmal_port.h" 		//internals
@@ -19,22 +19,27 @@
 #define MMAL_PORT_TYPE_INPUT  2
 #define MMAL_PORT_TYPE_OUTPUT 3
 
+#define WIDTH 1920
+#define HEIGHT 1080
+
 void consume_queue_on_connection(MMAL_PORT_T *port, MMAL_QUEUE_T *queue);
 
 void connection_callback(MMAL_CONNECTION_T *conn)
 {
-//	fprintf(stderr, "[%ld] Conn callback. Queue length: %u\n", pthread_self(),mmal_queue_length(conn->queue));
+//	fprintf(stderr, "[%ld] Conn callback on conn [%p],conn in: %p,conn out: %p, Queue length: %u\n", pthread_self(), conn, conn->in, conn->out, mmal_queue_length(conn->queue));
+	consume_queue_on_connection(conn->out, conn->pool->queue);
+	consume_queue_on_connection(conn->in, conn->queue);
 }
 
 static void camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 {
- //	fprintf(stderr,"[%ld] Camera Callback called\n", pthread_self());
+ 	fprintf(stderr,"[%ld] Camera Callback called\n", pthread_self());
    	mmal_buffer_header_release(buffer);
 }
 
 static void preview_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 {
- //	fprintf(stderr,"[%ld] Preview Control Callback called on port %p\n", pthread_self(), port);
+ 	fprintf(stderr,"[%ld] Preview Control Callback called on port %p\n", pthread_self(), port);
    	mmal_buffer_header_release(buffer);
 }
 
@@ -85,7 +90,7 @@ int main(void)
 	vcos_assert((mmal_port_enable(preview->control, preview_control_callback) == MMAL_SUCCESS) 
 		&& "Failed enabling preview control port");
 
-	vcos_assert(( set_preview_component_defaults(preview) == MMAL_SUCCESS) 
+	vcos_assert((set_preview_component_defaults(preview) == MMAL_SUCCESS) 
 		&& "Failed setting preview components default values");
 
 	vcos_assert((mmal_component_enable(preview) == MMAL_SUCCESS) 
@@ -100,15 +105,13 @@ int main(void)
 
 	preview_conn->callback = connection_callback;
 
-	/* Main loop
-	 */
-	while (1)
-	{
-		mmal_port_parameter_set_boolean(camera->output[1], MMAL_PARAMETER_CAPTURE, 1);
-		consume_queue_on_connection(preview_conn->out, preview_conn->pool->queue);
-		consume_queue_on_connection(preview_conn->in, preview_conn->queue);
-	}
+	mmal_port_parameter_set_boolean(camera->output[1], MMAL_PARAMETER_CAPTURE, 1);
+	
+	consume_queue_on_connection(preview_conn->out, preview_conn->pool->queue);
 
+	vcos_sleep(5000);
+
+	// TODO: implement finalize_state to close components and connections
 	vcos_assert(( finalize_state() == 0) && "Failed freeing memory nicely" );
 
 	fprintf(stderr, "No error, program executed just fine\n");

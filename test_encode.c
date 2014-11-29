@@ -54,7 +54,6 @@ int main(void)
 	MMAL_CONNECTION_T *encoder_conn=0;
 	USERDATA_T callback_data;
 
-	
 	// bcm should be initialized before any GPU call is made
 	bcm_host_init();
 
@@ -131,11 +130,10 @@ int main(void)
 	vcos_assert((mmal_port_send_buffer(encoder->output[0], buffer)== MMAL_SUCCESS)
 		&& "Unable to send buffer to encoder output port");
 
-
 	vcos_assert((mmal_port_parameter_set_boolean(camera->output[1], MMAL_PARAMETER_CAPTURE, 1) == MMAL_SUCCESS) 
 		&& "Unable to set camera->output[1] capture parameter");
 
-        vcos_sleep(5000);
+        vcos_sleep(5000); 	// work 5 seconds and exit
 
 	return 0;
 }

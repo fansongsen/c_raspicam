@@ -51,6 +51,7 @@ void main(void)
 	vcos_assert((mmal_connection_enable(preview_conn) == MMAL_SUCCESS) 
 		&& "Failed enabling connection");
 
-	while (1)
-		mmal_port_parameter_set_boolean(camera->output[1], MMAL_PARAMETER_CAPTURE, 1);
+	mmal_port_parameter_set_boolean(camera->output[1], MMAL_PARAMETER_CAPTURE, 1);
+
+	vcos_sleep(5000);
 }
