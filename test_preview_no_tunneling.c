@@ -1,8 +1,8 @@
 #include <stdio.h>
 
-//#include <sys/types.h>
-//#include <pthread.h>
-//#include <unistd.h>
+#include <sys/types.h>
+#include <pthread.h>
+#include <unistd.h>
 
 #include "interface/mmal/mmal.h"
 #include "interface/mmal/mmal_port.h" 		//internals
@@ -62,7 +62,6 @@ int main(void)
 	MMAL_COMPONENT_T *camera =0;
 	MMAL_COMPONENT_T *preview=0;
 	static MMAL_CONNECTION_T *preview_conn=0;
-	MMAL_BUFFER_HEADER_T *buffer;
 	
 	// bcm should be initialized before any GPU call is made
 	bcm_host_init();
