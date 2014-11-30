@@ -82,6 +82,7 @@ int main(void)
 	vcos_assert((mmal_component_enable(camera) == MMAL_SUCCESS) 
 		&& "Failed to enable camera component");
 
+	// Create Preview, set default values and enable it
 	vcos_assert((mmal_component_create(MMAL_COMPONENT_DEFAULT_VIDEO_RENDERER, &preview) == MMAL_SUCCESS) 
 		&& "Failed creating preview component");
 	
