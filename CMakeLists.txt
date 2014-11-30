@@ -19,6 +19,11 @@ set (TEST_SOURCES
    	m_video.c 
    	m_components.c)
 
+set (MOVE_SOURCES
+   	m_video.c 
+   	m_components.c
+   	m_move.c)
+
 set (MMAL_LIBS 
 	mmal_core 
 	mmal_util 
@@ -28,7 +33,7 @@ add_executable(test_preview  ${TEST_SOURCES}   test_preview.c)
 add_executable(test_preview_no_tunneling  ${TEST_SOURCES} test_preview_no_tunneling.c)
 add_executable(test_encode   ${TEST_SOURCES}   test_encode.c)
 add_executable(test_encode_no_tunneling   ${TEST_SOURCES}   test_encode_no_tunneling.c)
-add_executable(test_movement_detection   ${TEST_SOURCES}   test_movement_detection.c)
+add_executable(test_movement_detection   ${MOVE_SOURCES}   test_movement_detection.c)
 
 target_link_libraries(test_preview ${MMAL_LIBS} vcos bcm_host)
 target_link_libraries(test_preview_no_tunneling ${MMAL_LIBS} vcos bcm_host)
