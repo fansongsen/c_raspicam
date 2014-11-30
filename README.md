@@ -11,9 +11,17 @@ This source changes the test\_preview code, taking out the tunneling flag on the
 
 test\_encoding: A simple version of encoding the output as h264 and saving to a file
 
-comming up:
+test\_encode\_on\_move: A simple version of movement detection.
 
-test\_encode\_on\_move:
+Currently the move detection is done in memory and by hand.
+
+There are two clear improvements to be done. The first would be to create a user defined component and pack the move
+detection code on it. This way we can use tunneling connection to get a better hardware utilization.
+
+The second will be to use motion vectors. This is done directly in hardware and could than possibly be used together with 
+tunneling connections.
+
+
 
 Build
 -----
