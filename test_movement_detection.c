@@ -8,58 +8,15 @@
 // vc framework includes
 #include "interface/vcos/vcos_assert.h"
 
-#include "m_video.h"
+#include "m_file.h"
 #include "m_components.h"
-
-#define RUN_DURATION 10 // every how many frames we refresh the buffer
-#define THRESHOLD 50
-
-typedef struct
-{
-	FILE *file_handle;        
-	MMAL_POOL_T *pool; 
-} USERDATA_T;
+#include "m_move.h"
+#include "m_options.h"
 
 void consume_queue_on_connection(MMAL_PORT_T *port, MMAL_QUEUE_T *queue);
 void consume_queue_on_connection_if_moves(MMAL_PORT_T *port, MMAL_QUEUE_T *queue);
-void update_tmp_buff(const void* data, void* buff, unsigned frame_sz);
 
-static void* buff_tmp_data = 0;
-unsigned offset=0;
-
-void* init_tmp_buffer(const void* data, int frame_sz){
-        void* new_buff = (void *)malloc(frame_sz);
-        if (new_buff == NULL) exit(1);
-        update_tmp_buff(data, new_buff, frame_sz);
-        fprintf(stderr,"Initializing buffer with size %u\n", frame_sz);
-        return new_buff;    
-}
-
-void update_tmp_buff(const void* data, void* buff, unsigned frame_sz){
-        memcpy(buff, data, frame_sz);
-        fprintf(stderr,"Updated tmp buffer\n");
-        offset = 0;
-}
-
-unsigned moved(const void* frame_data, void* buff_tmp_data, int frame_sz) {
-	static unsigned if_moved = 0;
-        unsigned count_per_run = frame_sz/(RUN_DURATION); // each run it will test count_per_run pixels
-	if (if_moved == 0)
-	{
-		for (; count_per_run > 0 && (offset < frame_sz); count_per_run--,offset++){
-			if (abs(*((char*)buff_tmp_data + offset) - *((char*)frame_data + offset)) > THRESHOLD) 
-			{
-				if_moved = 10;
-				update_tmp_buff(frame_data, buff_tmp_data, frame_sz);
-				break;
-			}
-		}    
-	}
-        if (offset >= frame_sz)
-                update_tmp_buff((void *)frame_data, (void *)buff_tmp_data, frame_sz);
-	if_moved = if_moved == 0 ? 0 : if_moved-1;
-	return if_moved;
-}
+void* buff_tmp_data = 0;
 
 void connection_video2encoder_callback(MMAL_CONNECTION_T *conn)
 {
@@ -75,7 +32,7 @@ void consume_queue_on_connection_if_moves(MMAL_PORT_T *port, MMAL_QUEUE_T *queue
 	{
 		if (!buff_tmp_data)
 			buff_tmp_data = init_tmp_buffer(buffer->data, buffer->length);
-		if (moved(buffer->data, buff_tmp_data, buffer->length))
+		if (movement_detected(buffer, buff_tmp_data))
 		{
 			if (mmal_port_send_buffer(port, buffer) != MMAL_SUCCESS)
 			{
@@ -94,11 +51,11 @@ void consume_queue_on_connection(MMAL_PORT_T *port, MMAL_QUEUE_T *queue)
 	
 	while ((buffer = mmal_queue_get(queue)) != NULL)
 	{
-			if (mmal_port_send_buffer(port, buffer) != MMAL_SUCCESS)
-			{
-				mmal_queue_put_back(queue, buffer);
-				break;
-			}
+		if (mmal_port_send_buffer(port, buffer) != MMAL_SUCCESS)
+		{
+			mmal_queue_put_back(queue, buffer);
+			break;
+		}
 	}
 }
 
@@ -130,7 +87,7 @@ static void encoder_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 }
 
 
-int main(void)
+int main(int argc, char **argv)
 {
 	MMAL_COMPONENT_T *camera =0;
 	MMAL_COMPONENT_T *preview=0;
@@ -142,11 +99,10 @@ int main(void)
 	// bcm should be initialized before any GPU call is made
 	bcm_host_init();
 
-	vcos_assert(( init_state() == 0) 
-		&& "Checking setting initial state failed");
+	setNonDefaultOptions(argc, argv);
 
-	// Open file to save the video #TODO: do not use this variable hard coded
-	vcos_assert((callback_data.file_handle = fopen("/home/pi/output.h264", "wb")) != NULL);
+	// Open file to save the video 
+	open_new_file_handle(&callback_data, output_file_name);
 
 	// Create Camera, set default values and enable it
 	vcos_assert((mmal_component_create(MMAL_COMPONENT_DEFAULT_CAMERA, &camera) == MMAL_SUCCESS) 
