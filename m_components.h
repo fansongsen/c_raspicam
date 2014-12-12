@@ -5,6 +5,6 @@
 
 void set_port_default_format(MMAL_ES_FORMAT_T *port_fmt);
 MMAL_STATUS_T set_preview_component_defaults(MMAL_COMPONENT_T *preview);
-
+MMAL_STATUS_T set_camera_component_defaults(MMAL_COMPONENT_T *camera);
 
 #endif
