@@ -16,12 +16,12 @@ link_directories(/opt/vc/src/hello_pi/libs/vgfont)
 find_package( OpenCV REQUIRED )
 
 set (TEST_SOURCES
-   	m_video.c 
    	m_components.c)
 
 set (MOVE_SOURCES
-   	m_video.c 
+   	m_options.c 
    	m_components.c
+   	m_file.c
    	m_move.c)
 
 set (MMAL_LIBS 
@@ -38,4 +38,5 @@ add_executable(test_movement_detection   ${MOVE_SOURCES}   test_movement_detecti
 target_link_libraries(test_preview ${MMAL_LIBS} vcos bcm_host)
 target_link_libraries(test_preview_no_tunneling ${MMAL_LIBS} vcos bcm_host)
 target_link_libraries(test_encode ${MMAL_LIBS} vcos bcm_host)
+target_link_libraries(test_encode_no_tunneling ${MMAL_LIBS} vcos bcm_host)
 target_link_libraries(test_movement_detection ${MMAL_LIBS} vcos bcm_host)
