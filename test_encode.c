@@ -7,7 +7,6 @@
 // vc framework includes
 #include "interface/vcos/vcos_assert.h"
 
-#include "m_video.h"
 #include "m_components.h"
 
 typedef struct
@@ -57,9 +56,6 @@ int main(void)
 	// bcm should be initialized before any GPU call is made
 	bcm_host_init();
 
-	vcos_assert(( init_state() == 0) 
-		&& "Checking setting initial state failed");
-
 	// Open file to save the video
 	vcos_assert((callback_data.file_handle = fopen("/home/pi/output.h264", "wb")) != NULL);
 
@@ -67,13 +63,8 @@ int main(void)
 	vcos_assert((mmal_component_create(MMAL_COMPONENT_DEFAULT_CAMERA, &camera) == MMAL_SUCCESS) 
 		&& "Failed creating camera component");
 
-        int i;
-        for (i=0; i<3; i++)
-        {
-                set_port_default_format(camera->output[i]->format);
-                assert((mmal_port_format_commit(camera->output[i]) == MMAL_SUCCESS) 
-			&& "Failed setting camera port format");
-        }
+	vcos_assert((set_camera_component_defaults(camera)) == MMAL_SUCCESS
+		&& "Failed setting camera components default values");
 
 	vcos_assert((mmal_component_enable(camera) == MMAL_SUCCESS) 
 		&& "Failed to enable camera component");
@@ -133,7 +124,7 @@ int main(void)
 	vcos_assert((mmal_port_parameter_set_boolean(camera->output[1], MMAL_PARAMETER_CAPTURE, 1) == MMAL_SUCCESS) 
 		&& "Unable to set camera->output[1] capture parameter");
 
-        vcos_sleep(5000); 	// work 5 seconds and exit
+        vcos_sleep(10000); 	// work 5 seconds and exit
 
 	return 0;
 }

@@ -7,7 +7,6 @@
 // vc framework includes
 #include "interface/vcos/vcos_assert.h"
 
-#include "m_video.h"
 #include "m_components.h"
 
 void main(void)
@@ -18,9 +17,6 @@ void main(void)
 	
 	// bcm should be initialized before any GPU call is made
 	bcm_host_init();
-
-	vcos_assert(( init_state() == 0) 
-		&& "Checking setting initial state failed");
 
 	vcos_assert((mmal_component_create(MMAL_COMPONENT_DEFAULT_CAMERA, &camera) == MMAL_SUCCESS) 
 		&& "Failed creating camera component");

@@ -8,7 +8,6 @@
 // vc framework includes
 #include "interface/vcos/vcos_assert.h"
 
-#include "m_video.h"
 #include "m_components.h"
 
 typedef struct
@@ -84,9 +83,6 @@ int main(void)
 
 	// bcm should be initialized before any GPU call is made
 	bcm_host_init();
-
-	vcos_assert(( init_state() == 0) 
-		&& "Checking setting initial state failed");
 
 	// Open file to save the video #TODO: do not use this variable hard coded
 	vcos_assert((callback_data.file_handle = fopen("/home/pi/output.h264", "wb")) != NULL);
