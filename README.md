@@ -9,9 +9,20 @@ test\_preview\_no\_tunneling: the worst problem so far is to understand how the 
 
 This source changes the test\_preview code, taking out the tunneling flag on the connections and passing the buffers manually.
 
-test\_encoding: A simple version of encoding the output as h264 and saving to a file
+test\_encode: A simple version of encoding the output as h264 and saving to a file
 
-test\_encode\_on\_move: A simple version of movement detection.
+test\_encode\_no\_tunneling: Modified version of test\_encode not using tunneling connections
+
+test\_movement\_detection: Starts capturing the scene until it stops moving (calibration time). 
+When the scene is static the program waits until something changes.
+When the movement is detected, all frames are sent to output, until n frames come where no movement is registered.
+For this first version, n=50 (about 2 seconds).
+After ~2 seconds with no move, the program exits.
+
+run\_motion.sh: runs a loop with a counter. Every iteration it start test\_movement with a new name and the desired output name.
+This way, every registered motion becomes a video saved on the chosen directory to be possibly exported somewhere else.
+
+Notes:
 
 Currently the move detection is done in memory and by hand.
 
@@ -35,4 +46,5 @@ Build
 
 4. make
 
-5. If everything goes fine, you have the binary "test\_preview" and "test\_preview\_no\_tunneling in the project directory
+5. If everything goes fine, you should have the binaries in the project directory. Take a look at run\_motion.sh and have fun.
+
