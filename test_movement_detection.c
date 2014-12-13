@@ -200,16 +200,5 @@ int main(int argc, char **argv)
 			break;
 	}
 
-	/*
-	mmal_port_disable(encoder->input[1]);
-	mmal_port_disable(encoder->input[2]);
-	mmal_port_disable(camera->input[2]);
-	mmal_port_disable(preview->input[1]);
-	mmal_port_disable(preview->input[2]);
-	*/
-
-	// close connections
-	//mmal_connection_destroy();
-
 	return 0;
 }
