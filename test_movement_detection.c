@@ -17,11 +17,19 @@ void consume_queue_on_connection(MMAL_PORT_T *port, MMAL_QUEUE_T *queue);
 void consume_queue_on_connection_if_moves(MMAL_PORT_T *port, MMAL_QUEUE_T *queue);
 
 void* buff_tmp_data = 0;
+int exit_prog = 0;
 
 void connection_video2encoder_callback(MMAL_CONNECTION_T *conn)
 {
 	consume_queue_on_connection(conn->out, conn->pool->queue);
 	consume_queue_on_connection_if_moves(conn->in, conn->queue);
+}
+
+unsigned set_moving(unsigned curr_state){
+	static unsigned last = 0;
+	unsigned tmp = last;
+	last = curr_state;
+	return ((tmp != 0) && (curr_state == 0)) ? 1 : 0 ;
 }
 
 void consume_queue_on_connection_if_moves(MMAL_PORT_T *port, MMAL_QUEUE_T *queue)
@@ -30,10 +38,12 @@ void consume_queue_on_connection_if_moves(MMAL_PORT_T *port, MMAL_QUEUE_T *queue
 	
 	while ((buffer = mmal_queue_get(queue)) != NULL)
 	{
+		unsigned old_state,new_state=1;
 		if (!buff_tmp_data)
 			buff_tmp_data = init_tmp_buffer(buffer->data, buffer->length);
 		if (movement_detected(buffer, buff_tmp_data))
 		{
+			set_moving(1);
 			if (mmal_port_send_buffer(port, buffer) != MMAL_SUCCESS)
 			{
 				mmal_queue_put_back(queue, buffer);
@@ -41,6 +51,14 @@ void consume_queue_on_connection_if_moves(MMAL_PORT_T *port, MMAL_QUEUE_T *queue
 		}
 		else
 		{
+			static unsigned stop_counter=0;
+			if (set_moving(0))
+			{
+				fprintf(stderr,"Stopped!\n");
+				if (stop_counter==1)
+					exit_prog=1;
+				stop_counter++;
+			}
         		mmal_buffer_header_release(buffer);
 		}
 	}
@@ -103,6 +121,7 @@ int main(int argc, char **argv)
 
 	// Open file to save the video 
 	open_new_file_handle(&callback_data, output_file_name);
+	fprintf(stderr, "Output Filename: %s\n", output_file_name);
 
 	// Create Camera, set default values and enable it
 	vcos_assert((mmal_component_create(MMAL_COMPONENT_DEFAULT_CAMERA, &camera) == MMAL_SUCCESS) 
@@ -174,7 +193,23 @@ int main(int argc, char **argv)
 
 	consume_queue_on_connection(encoder_conn->out, encoder_conn->pool->queue);
 
-        vcos_sleep(20000); 	// work 5 seconds and exit
+	while(1)
+	{
+        	vcos_sleep(1000); // wait for exit	
+		if (exit_prog)
+			break;
+	}
+
+	/*
+	mmal_port_disable(encoder->input[1]);
+	mmal_port_disable(encoder->input[2]);
+	mmal_port_disable(camera->input[2]);
+	mmal_port_disable(preview->input[1]);
+	mmal_port_disable(preview->input[2]);
+	*/
+
+	// close connections
+	//mmal_connection_destroy();
 
 	return 0;
 }
