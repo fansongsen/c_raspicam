@@ -48,3 +48,7 @@ Build
 
 5. If everything goes fine, you should have the binaries in the project directory. Take a look at run\_motion.sh and have fun.
 
+
+Short demonstration
+-------------------
+http://www.youtube.com/watch?v=x9Po-ugkrvw
