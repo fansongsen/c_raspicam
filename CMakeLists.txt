@@ -21,7 +21,6 @@ set (TEST_SOURCES
 set (MOVE_SOURCES
    	m_options.c 
    	m_components.c
-   	m_file.c
    	m_move.c)
 
 set (MMAL_LIBS 
