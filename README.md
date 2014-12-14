@@ -1,4 +1,33 @@
-Simplest Raspberry Pi MMAL project
+Raspiberry Pi MMAL movement detection project
+
+
+Introduction
+------------
+
+This project has mainly 2 aims:
+1) offer a clear example how to use mmal library in c in raspberry pi
+2) provide a movement detection algorithm able to create videos of the scenes where something moves.
+
+
+Current state:
+--------------
+
+Text mode version, capable of produce videos when something moves on the screen.
+As movement is not detected the frames are ignored.
+
+
+Current issues / improvements to be done:
+---------------
+1) the playback video is faster then it should be.
+It seems that this problems originates from the option encoding type=MMAL\_ENCODING\_I420.
+If one uses encoding MMAL\_ENCODING\_OPAQUE, this effects disapear. 
+The problem is that, if one uses ENCODING\_OPAQUE just the headers are visible in user space, and we need the whole frame data to detect movement.
+
+2) currently there is no way to select a portion of the image and ignore the movement on the rest.
+
+3) improve algorithm of detection: the current algorithm is just a comparison between the current frame with a frame from about a second ago. As soon as a difference greater than threshold is found, it is considered that something moved.
+
+Points 1) and 3) can be improved with motion vectors, probably the next step.
 
 Projects
 --------
