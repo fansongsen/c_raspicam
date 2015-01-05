@@ -13,6 +13,8 @@
 #include "m_move.h"
 #include "m_options.h"
 
+#define MAX_OUTPUTED_FRAMES 300
+
 void consume_queue_on_connection(MMAL_PORT_T *port, MMAL_QUEUE_T *queue);
 void consume_queue_on_connection_if_moves(MMAL_PORT_T *port, MMAL_QUEUE_T *queue);
 
@@ -25,9 +27,14 @@ void connection_video2encoder_callback(MMAL_CONNECTION_T *conn)
 	consume_queue_on_connection_if_moves(conn->in, conn->queue);
 }
 
-unsigned set_moving(unsigned curr_state){
+unsigned set_moving_and_test_if_ends(unsigned curr_state){
 	static unsigned last = 0;
+	static unsigned sent_frames= 0;
 	unsigned tmp = last;
+
+	// if it is moving and the outputfile is too big, quit
+	if (curr_state && (++sent_frames > MAX_OUTPUTED_FRAMES))
+		exit_prog=1;
 	last = curr_state;
 	return ((tmp != 0) && (curr_state == 0)) ? 1 : 0 ;
 }
@@ -43,7 +50,7 @@ void consume_queue_on_connection_if_moves(MMAL_PORT_T *port, MMAL_QUEUE_T *queue
 			buff_tmp_data = init_tmp_buffer(buffer->data, buffer->length);
 		if (movement_detected(buffer, buff_tmp_data))
 		{
-			set_moving(1);
+			set_moving_and_test_if_ends(1);
 			if (mmal_port_send_buffer(port, buffer) != MMAL_SUCCESS)
 			{
 				mmal_queue_put_back(queue, buffer);
@@ -52,7 +59,7 @@ void consume_queue_on_connection_if_moves(MMAL_PORT_T *port, MMAL_QUEUE_T *queue
 		else
 		{
 			static unsigned stop_counter=0;
-			if (set_moving(0))
+			if (set_moving_and_test_if_ends(0))
 			{
 				fprintf(stderr,"Stopped!\n");
 				if (stop_counter==1)
