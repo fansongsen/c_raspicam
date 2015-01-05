@@ -78,6 +78,14 @@ Build
 5. If everything goes fine, you should have the binaries in the project directory. Take a look at run\_motion.sh and have fun.
 
 
+I just want to try it out
+-------------------------
+1. Clone this project
+
+2. Go to the clone directory
+
+3. ./run\_motion myVideo 100
+
 Short demonstration
 -------------------
-http://www.youtube.com/watch?v=x9Po-ugkrvw
+http://www.youtube.com/watch?v=dv8wtgu-R4A
