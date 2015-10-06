@@ -32,15 +32,18 @@ void update_tmp_buff(const void* data, void* buff, unsigned frame_sz){
         memcpy(buff, data, frame_sz);
 }
 
+/*Compare images, uses the green channel and compares every 10 pixels*/
 unsigned movement_detected(MMAL_BUFFER_HEADER_T *buffer, void* buff_tmp_data) {
 	static unsigned moved = 60;
         unsigned counter = buffer->length; 
 	if (!(moved % 20))
 	{
-		for (counter = buffer->length; counter > 0 ; counter -= 5){
-			if (abs(*((char*)buff_tmp_data + counter) - *((char*)buffer->data + counter)) > threshold) 
+		char *a=(char*)buff_tmp_data+buffer->length-1;
+		char *b=(char*)buffer->data+buffer->length-1;
+		for (; a > (char*)buff_tmp_data ; a-=30, b-=30){
+			if (abs((*a) - (*b)) > threshold) 
 			{
-        			fprintf(stderr,"Movement detected\n");
+        			fprintf(stderr,"Movement detected - %d - %d = %d\n", *a, *b, *a - *b);
 				moved = 60;
 				break;
 			}
