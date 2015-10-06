@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/time.h> // using the timer to know how many frames/sec
 
 #include "interface/mmal/mmal.h"
 #include "util/mmal_default_components.h"
@@ -20,6 +21,25 @@ void consume_queue_on_connection_if_moves(MMAL_PORT_T *port, MMAL_QUEUE_T *queue
 
 void* buff_tmp_data = 0;
 int exit_prog = 0;
+static unsigned sent_frames= 0;
+static struct timeval tm1;
+unsigned start_timer=0;
+
+static unsigned calibrating = 1;
+
+static inline void start()
+{
+    gettimeofday(&tm1, NULL);
+}
+
+static inline void stop()
+{
+    struct timeval tm2;
+    gettimeofday(&tm2, NULL);
+
+    unsigned long long t = 1000 * (tm2.tv_sec - tm1.tv_sec) + (tm2.tv_usec - tm1.tv_usec) / 1000;
+    printf("%llu ms elapsed, %u frames, frequency: %f f/s\n", t, sent_frames, sent_frames*1000.00/t);
+}
 
 void connection_video2encoder_callback(MMAL_CONNECTION_T *conn)
 {
@@ -29,12 +49,13 @@ void connection_video2encoder_callback(MMAL_CONNECTION_T *conn)
 
 unsigned set_moving_and_test_if_ends(unsigned curr_state){
 	static unsigned last = 0;
-	static unsigned sent_frames= 0;
 	unsigned tmp = last;
 
 	// if it is moving and the outputfile is too big, quit
-	if (curr_state && (++sent_frames > MAX_OUTPUTED_FRAMES))
+	if (curr_state && (++sent_frames > MAX_OUTPUTED_FRAMES)){
+		stop();
 		exit_prog=1;
+	}
 	last = curr_state;
 	return ((tmp != 0) && (curr_state == 0)) ? 1 : 0 ;
 }
@@ -45,11 +66,14 @@ void consume_queue_on_connection_if_moves(MMAL_PORT_T *port, MMAL_QUEUE_T *queue
 	
 	while ((buffer = mmal_queue_get(queue)) != NULL)
 	{
-		unsigned old_state,new_state=1;
 		if (!buff_tmp_data)
 			buff_tmp_data = init_tmp_buffer(buffer->data, buffer->length);
 		if (movement_detected(buffer, buff_tmp_data))
 		{
+			if (! start_timer) {
+				start_timer=1;
+				start();
+			}
 			set_moving_and_test_if_ends(1);
 			if (mmal_port_send_buffer(port, buffer) != MMAL_SUCCESS)
 			{
@@ -62,8 +86,10 @@ void consume_queue_on_connection_if_moves(MMAL_PORT_T *port, MMAL_QUEUE_T *queue
 			if (set_moving_and_test_if_ends(0))
 			{
 				fprintf(stderr,"Stopped!\n");
-				if (stop_counter==1)
+				if (stop_counter==1){
+					stop();
 					exit_prog=1;
+				}
 				stop_counter++;
 			}
         		mmal_buffer_header_release(buffer);
@@ -203,8 +229,9 @@ int main(int argc, char **argv)
 	while(1)
 	{
         	vcos_sleep(1000); // wait for exit	
-		if (exit_prog)
+		if (exit_prog){
 			break;
+		}
 	}
 
 	return 0;
