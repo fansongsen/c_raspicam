@@ -10,13 +10,6 @@
 
 void open_new_file_handle(USERDATA_T *callback, char* name)
 {
-	/*
-	time_t t = time(NULL);
-	struct tm tm = *localtime(&t);
-	snprintf(output_file_name, MAX_NAME_SIZE, "%d%d%d_%d%d%d%s", tm.tm_year + 1900, 
-		tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, ".h264");
-	*/
-
 	vcos_assert((callback->file_handle = fopen(output_file_name, "wb")) != NULL);
 }
 
@@ -34,23 +27,21 @@ void update_tmp_buff(const void* data, void* buff, unsigned frame_sz){
 
 /*Compare images, uses the green channel and compares every 10 pixels*/
 unsigned movement_detected(MMAL_BUFFER_HEADER_T *buffer, void* buff_tmp_data) {
-	static unsigned moved = 60;
+	unsigned moved=0;
         unsigned counter = buffer->length; 
-	if (!(moved % 20))
-	{
-		char *a=(char*)buff_tmp_data+buffer->length-1;
-		char *b=(char*)buffer->data+buffer->length-1;
-		for (; a > (char*)buff_tmp_data ; a-=30, b-=30){
-			if (abs((*a) - (*b)) > threshold) 
-			{
-        			fprintf(stderr,"Movement detected - %d - %d = %d\n", *a, *b, *a - *b);
-				moved = 60;
-				break;
-			}
-		}    
-		update_tmp_buff(buffer->data, buff_tmp_data, buffer->length);
-	}
-	moved = moved == 0 ? 0 : moved-1;
+
+	char *a=(char*)buff_tmp_data+buffer->length-1;
+	char *b=(char*)buffer->data+buffer->length-1;
+	char *buff=(char*)buff_tmp_data;
+	for (; a > buff ; a-=30, b-=30){
+		if (abs((*a) - (*b)) > threshold) 
+		{
+			fprintf(stderr,"Movement detected - %d - %d = %d\n", *a, *b, *a - *b);
+			moved = 1;
+			break;
+		}
+	}    
+	update_tmp_buff(buffer->data, buff_tmp_data, buffer->length);
 	return moved;
 }
 

@@ -22,14 +22,21 @@ void consume_queue_on_connection_if_moves(MMAL_PORT_T *port, MMAL_QUEUE_T *queue
 void* buff_tmp_data = 0;
 int exit_prog = 0;
 static unsigned sent_frames= 0;
-static struct timeval tm1;
-unsigned start_timer=0;
+static struct timeval tm1={0};
 
 static unsigned calibrating = 1;
 
 static inline void start()
 {
     gettimeofday(&tm1, NULL);
+}
+
+static inline double elapsed(){
+    struct timeval tm3={0};
+    gettimeofday(&tm3, NULL);
+    double elapsed = (1000 * (tm3.tv_sec - tm1.tv_sec) + (tm3.tv_usec - tm1.tv_usec) / 1000);
+    //fprintf(stderr, "Time elapsed: tm3:%ld,%ld tm1:%ld,%ld  %f\n", tm3.tv_sec, tm3.tv_usec, tm1.tv_sec, tm1.tv_usec, elapsed);
+    return elapsed;
 }
 
 static inline void stop()
@@ -47,52 +54,56 @@ void connection_video2encoder_callback(MMAL_CONNECTION_T *conn)
 	consume_queue_on_connection_if_moves(conn->in, conn->queue);
 }
 
-unsigned set_moving_and_test_if_ends(unsigned curr_state){
-	static unsigned last = 0;
-	unsigned tmp = last;
-
-	// if it is moving and the outputfile is too big, quit
-	if (curr_state && (++sent_frames > MAX_OUTPUTED_FRAMES)){
-		stop();
-		exit_prog=1;
+void send_buff_to_encoder(MMAL_PORT_T *port, MMAL_QUEUE_T *queue, MMAL_BUFFER_HEADER_T *buffer)
+{
+	if (mmal_port_send_buffer(port, buffer) != MMAL_SUCCESS)
+	{
+		mmal_queue_put_back(queue, buffer);
 	}
-	last = curr_state;
-	return ((tmp != 0) && (curr_state == 0)) ? 1 : 0 ;
 }
 
 void consume_queue_on_connection_if_moves(MMAL_PORT_T *port, MMAL_QUEUE_T *queue)
 {
 	MMAL_BUFFER_HEADER_T *buffer;
+	static moving = 0;
 	
 	while ((buffer = mmal_queue_get(queue)) != NULL)
 	{
+		// if the frame is not initialized, init
 		if (!buff_tmp_data)
 			buff_tmp_data = init_tmp_buffer(buffer->data, buffer->length);
-		if (movement_detected(buffer, buff_tmp_data))
-		{
-			if (! start_timer) {
-				start_timer=1;
-				start();
+
+		if (calibrating) {
+			if (tm1.tv_usec == 0 && tm1.tv_sec == 0) { 
+				start(); // start calibration time
+				fprintf(stderr, "Calibration starts\n");
+			} else if (elapsed() > 3000) {   
+				fprintf(stderr, "Calibration finished\n");
+				calibrating =0;
+				tm1.tv_sec  =0;
+				tm1.tv_usec =0;
+				// get a snapshot
+				update_tmp_buff(buffer->data, buff_tmp_data, buffer->length);
 			}
-			set_moving_and_test_if_ends(1);
-			if (mmal_port_send_buffer(port, buffer) != MMAL_SUCCESS)
-			{
-				mmal_queue_put_back(queue, buffer);
+			send_buff_to_encoder(port, queue, buffer);	// during calibration, video is recorded
+
+		} else if (!moving) { // calibration over, waiting for move
+			if (movement_detected(buffer, buff_tmp_data)) {
+				fprintf(stderr, "Recording starts\n");
+				moving = 1;
+				start(); 
+				send_buff_to_encoder(port, queue, buffer);	// during calibration, video is recorded
+			} else {
+        			mmal_buffer_header_release(buffer);		// nothing moved, discard img
 			}
-		}
-		else
-		{
-			static unsigned stop_counter=0;
-			if (set_moving_and_test_if_ends(0))
-			{
+
+		} else {	// something is moving, save the next n seconds
+			send_buff_to_encoder(port, queue, buffer);		// save action
+			if (!exit_prog && elapsed() > 5000) {
+				exit_prog=1;
 				fprintf(stderr,"Stopped!\n");
-				if (stop_counter==1){
-					stop();
-					exit_prog=1;
-				}
-				stop_counter++;
+				stop();
 			}
-        		mmal_buffer_header_release(buffer);
 		}
 	}
 }
@@ -228,8 +239,9 @@ int main(int argc, char **argv)
 
 	while(1)
 	{
-        	vcos_sleep(1000); // wait for exit	
+        	vcos_sleep(1000); // wait for exit call	
 		if (exit_prog){
+        		vcos_sleep(500); // exit called, wait for all buffers be flushed
 			break;
 		}
 	}
